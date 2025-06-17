@@ -5,6 +5,8 @@ const app = express();
 const port = 3000;
 
 app.use(express.json());
+
+// Serve static files from "public"
 app.use(express.static(path.join(__dirname, 'public')));
 
 const USERS_FILE = path.join(__dirname, 'users.json');
@@ -12,6 +14,7 @@ const USERS_FILE = path.join(__dirname, 'users.json');
 const ADMIN_USERNAME = 'AMMINISTRATORE99';
 const ADMIN_PASSWORD = '511199';
 
+// Helper functions
 function loadUsers() {
   try {
     if (!fs.existsSync(USERS_FILE)) return {};
@@ -32,6 +35,7 @@ function saveUsers(users) {
   }
 }
 
+// REGISTER
 app.post('/register', (req, res) => {
   const { email, password, confirmPassword } = req.body;
 
@@ -52,6 +56,7 @@ app.post('/register', (req, res) => {
   if (users[email])
     return res.status(400).json({ message: 'Utente già registrato' });
 
+  // Salviamo l'utente con abbonamento free di default
   users[email] = { password, subscription: 'free' };
 
   saveUsers(users);
@@ -60,29 +65,30 @@ app.post('/register', (req, res) => {
   res.json({ message: 'Registrazione completata' });
 });
 
+// LOGIN
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password)
     return res.status(400).json({ message: 'Email e password richieste' });
 
+  // Login admin (solo controllo base)
   if (email.toUpperCase() === ADMIN_USERNAME) {
-    if (password === ADMIN_PASSWORD) return res.json({ message: 'Login admin riuscito' });
+    if (password === ADMIN_PASSWORD) return res.json({ message: 'Login admin riuscito', subscription: 'admin' });
     else return res.status(401).json({ message: 'Password admin errata' });
   }
 
   const users = loadUsers();
 
   if (users[email] && users[email].password === password) {
-    return res.json({
-      message: 'Login utente riuscito',
-      subscription: users[email].subscription || 'free'
-    });
+    // Rispondiamo con subscription per la gestione frontend
+    return res.json({ message: 'Login utente riuscito', subscription: users[email].subscription || 'free' });
   } else {
     return res.status(401).json({ message: 'Email o password errati' });
   }
 });
 
+// GET USERS (solo admin)
 app.get('/users', (req, res) => {
   const loggedInAdmin = req.headers['x-admin'];
   if (loggedInAdmin !== ADMIN_USERNAME) {
@@ -99,6 +105,7 @@ app.get('/users', (req, res) => {
   res.json(usersList);
 });
 
+// DELETE USER (solo admin)
 app.post('/delete-user', (req, res) => {
   const loggedInAdmin = req.headers['x-admin'];
   if (loggedInAdmin !== ADMIN_USERNAME) {
@@ -122,6 +129,7 @@ app.post('/delete-user', (req, res) => {
   res.json({ message: 'Utente eliminato' });
 });
 
+// ROOT serve login.html (dopo static)
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
