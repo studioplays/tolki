@@ -3,270 +3,37 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Login Tolki</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <title>Login</title>
   <style>
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(to right, #ece9e6, #ffffff);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-      flex-direction: column;
-    }
-
-    #form-container {
-      background-color: #fff;
-      padding: 30px 25px;
-      border-radius: 16px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-      max-width: 380px;
-      width: 100%;
-      text-align: center;
-    }
-
-    h1 {
-      margin-bottom: 20px;
-      color: #333;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      transition: border-color 0.3s ease;
-    }
-
-    input:focus {
-      border-color: #4A90E2;
-      outline: none;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      font-size: 1rem;
-      font-weight: 600;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      background-color: #4A90E2;
-      color: white;
-      transition: background-color 0.3s ease;
-    }
-
-    button:hover {
-      background-color: #357ABD;
-    }
-
-    .message {
-      color: red;
-      margin-top: 10px;
-      min-height: 24px;
-    }
-
-    #btnForgot {
-      background: none;
-      color: #4A90E2;
-      text-decoration: underline;
-      font-size: 0.9rem;
-      margin-top: 5px;
-      cursor: pointer;
-      border: none;
-    }
-
-    #btnForgot:hover {
-      color: #357ABD;
-    }
-
-    #passwordLegend {
-      font-size: 0.85rem;
-      color: #666;
-      margin-top: -8px;
-      margin-bottom: 12px;
-      display: none;
-      text-align: left;
-    }
-
-    #btnContainer {
-      display: flex;
-      gap: 12px;
-      margin-top: 10px;
-    }
-
-    #btnLogin, #btnRegister {
-      flex: 1;
-    }
+    body { font-family: Arial, sans-serif; padding: 40px; background: #f0f2f5; }
+    .container { max-width: 320px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+    input, button { width: 100%; padding: 12px; margin-top: 10px; font-size: 1rem; border-radius: 6px; border: 1px solid #ccc; }
+    button { background-color: #0078D7; color: white; border: none; cursor: pointer; font-weight: 700; }
+    button:hover { background-color: #005fa3; }
   </style>
 </head>
 <body>
 
-<div id="form-container">
-  <h1 id="formTitle">Benvenuto in Tolki</h1>
-  <input type="text" id="email" placeholder="Email o username" required />
-  <input type="password" id="password" placeholder="Password" required />
-  <input type="password" id="confirmPassword" placeholder="Conferma Password" required style="display:none;" />
-  <div id="passwordLegend">La password deve contenere almeno 6 caratteri</div>
-  
-  <div id="btnContainer">
-    <button id="btnLogin">Accedi</button>
-    <button id="btnRegister">Registrati</button>
+  <div class="container">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Inserisci il tuo nome" />
+    <button id="loginBtn">Accedi</button>
   </div>
-  
-  <button id="btnForgot">Password dimenticata?</button>
-  <div class="message" id="message"></div>
-</div>
 
-<script>
-  const emailInput = document.getElementById('email');
-  const passwordInput = document.getElementById('password');
-  const confirmPasswordInput = document.getElementById('confirmPassword');
-  const passwordLegend = document.getElementById('passwordLegend');
-  const message = document.getElementById('message');
-  const btnLogin = document.getElementById('btnLogin');
-  const btnRegister = document.getElementById('btnRegister');
-  const btnForgot = document.getElementById('btnForgot');
-  const formTitle = document.getElementById('formTitle');
-
-  const ADMIN_USERNAME = 'AMMINISTRATORE99';
-  const ADMIN_PASSWORD = '511199';
-
-  let isRegisterMode = false;
-
-  function showMessage(text, color = 'red') {
-    message.style.color = color;
-    message.textContent = text;
-  }
-
-  function resetForm() {
-    emailInput.value = '';
-    passwordInput.value = '';
-    confirmPasswordInput.value = '';
-    showMessage('');
-  }
-
-  function switchToRegister() {
-    isRegisterMode = true;
-    confirmPasswordInput.style.display = 'block';
-    passwordLegend.style.display = 'block';
-    btnLogin.style.display = 'none';
-    formTitle.textContent = 'Registrazione Tolki';
-    showMessage('');
-    resetForm();
-  }
-
-  function switchToLogin() {
-    isRegisterMode = false;
-    confirmPasswordInput.style.display = 'none';
-    passwordLegend.style.display = 'none';
-    btnLogin.style.display = 'block';
-    formTitle.textContent = 'Benvenuto in Tolki';
-    showMessage('');
-    resetForm();
-  }
-
-  btnRegister.addEventListener('click', () => {
-    if (!isRegisterMode) {
-      switchToRegister();
-    } else {
-      registerUser();
-    }
-  });
-
-  btnLogin.addEventListener('click', () => {
-    if (isRegisterMode) {
-      switchToLogin();
-    } else {
-      loginUser();
-    }
-  });
-
-  btnForgot.onclick = () => {
-    alert('Funzionalità di reset password non disponibile per ora.');
-  };
-
-  // Funzione per salvare utenti registrati (fake, lato client solo demo)
-  function saveUser(user) {
-    let users = JSON.parse(localStorage.getItem('users') || '[]');
-    users.push(user);
-    localStorage.setItem('users', JSON.stringify(users));
-  }
-
-  function findUser(email) {
-    let users = JSON.parse(localStorage.getItem('users') || '[]');
-    return users.find(u => u.email.toLowerCase() === email.toLowerCase());
-  }
-
-  function registerUser() {
-    const email = emailInput.value.trim();
-    const password = passwordInput.value.trim();
-    const confirmPassword = confirmPasswordInput.value.trim();
-
-    if (!email || !password || !confirmPassword) {
-      showMessage('Compila tutti i campi per registrarti.');
-      return;
-    }
-
-    if (password.length < 6) {
-      showMessage('La password deve contenere almeno 6 caratteri.');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      showMessage('Le password non corrispondono.');
-      return;
-    }
-
-    if(findUser(email)) {
-      showMessage('Utente già registrato.');
-      return;
-    }
-
-    saveUser({email, password});
-    showMessage('Registrazione completata! Ora puoi accedere.', 'green');
-    switchToLogin();
-  }
-
-  function loginUser() {
-    const email = emailInput.value.trim();
-    const password = passwordInput.value.trim();
-
-    if (!email || !password) {
-      showMessage('Inserisci email e password.');
-      return;
-    }
-
-    // Login admin (solo locale)
-    if (email.toUpperCase() === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      localStorage.setItem('loggedInUser', ADMIN_USERNAME);
-      showMessage('Accesso come amministratore.', 'green');
-      setTimeout(() => {
-        window.location.href = 'index.html';
-      }, 1000);
-      return;
-    }
-
-    const user = findUser(email);
-
-    if (!user || user.password !== password) {
-      showMessage('Email o password errati.');
-      return;
-    }
-
-    localStorage.setItem('loggedInUser', user.email);
-    showMessage('Login riuscito! Redirezionamento...', 'green');
-
-    setTimeout(() => {
+  <script>
+    const loginBtn = document.getElementById('loginBtn');
+    loginBtn.onclick = () => {
+      const username = document.getElementById('username').value.trim();
+      if (username.length < 3) {
+        alert('Inserisci un nome utente valido (min 3 caratteri).');
+        return;
+      }
+      // Salvo in localStorage
+      localStorage.setItem('loggedInUser', username);
+      // Vado a index
       window.location.href = 'index.html';
-    }, 1000);
-  }
-</script>
+    };
+  </script>
 
 </body>
 </html>
