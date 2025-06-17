@@ -256,194 +256,173 @@
     </div>
   </div>
 
-  <!-- TUTTO IL TUO JS ORIGINALE -->
-  <script>
-    const inputText = document.getElementById('inputText');
-    const outputText = document.getElementById('outputText');
-    const langFrom = document.getElementById('langFrom');
-    const langTo = document.getElementById('langTo');
-    const translateBtn = document.getElementById('translateBtn');
-    const speakBtn = document.getElementById('speakBtn');
-    const startMic = document.getElementById('startMic');
-    const stopMic = document.getElementById('stopMic');
+<script>
+  // --- CHECK LOGIN SEMPLICE ---
+  if (localStorage.getItem('isLoggedIn') !== 'true') {
+    window.location.href = 'login.html';
+  }
 
-    const openSettings = document.getElementById('openSettings');
-    const settingsModal = document.getElementById('settingsModal');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const goProBtn = document.getElementById('goProBtn');
+  const inputText = document.getElementById('inputText');
+  const outputText = document.getElementById('outputText');
+  const langFrom = document.getElementById('langFrom');
+  const langTo = document.getElementById('langTo');
+  const translateBtn = document.getElementById('translateBtn');
+  const speakBtn = document.getElementById('speakBtn');
+  const startMic = document.getElementById('startMic');
+  const stopMic = document.getElementById('stopMic');
 
-    const savedTranslationsDiv = document.getElementById('savedTranslations');
-    const translationsList = document.getElementById('translationsList');
+  const openSettings = document.getElementById('openSettings');
+  const settingsModal = document.getElementById('settingsModal');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const goProBtn = document.getElementById('goProBtn');
 
-    openSettings.onclick = () => settingsModal.style.display = 'flex';
-    logoutBtn.onclick = () => {
-      // Logout gestito da Firebase (vedi script più sotto)
+  const savedTranslationsDiv = document.getElementById('savedTranslations');
+  const translationsList = document.getElementById('translationsList');
+
+  openSettings.onclick = () => settingsModal.style.display = 'flex';
+  logoutBtn.onclick = () => {
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('userEmail');
+    window.location.href = 'login.html';
+  };
+
+  goProBtn.onclick = () => {
+    window.location.href = 'pro.html';
+  };
+
+  // Speech Recognition
+  let recognition;
+  if ('webkitSpeechRecognition' in window) {
+    recognition = new webkitSpeechRecognition();
+  } else if ('SpeechRecognition' in window) {
+    recognition = new SpeechRecognition();
+  }
+
+  if (recognition) {
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onresult = (event) => {
+      inputText.value = event.results[0][0].transcript;
     };
-
-    goProBtn.onclick = () => {
-      window.location.href = 'pro.html';
+    recognition.onstart = () => {
+      startMic.disabled = true;
+      stopMic.disabled = false;
     };
+    recognition.onend = () => {
+      startMic.disabled = false;
+      stopMic.disabled = true;
+    };
+    recognition.onerror = () => {
+      startMic.disabled = false;
+      stopMic.disabled = true;
+    };
+  }
 
-    // Speech Recognition
-    let recognition;
-    if ('webkitSpeechRecognition' in window) {
-      recognition = new webkitSpeechRecognition();
-    } else if ('SpeechRecognition' in window) {
-      recognition = new SpeechRecognition();
-    }
-
+  startMic.onclick = () => {
     if (recognition) {
-      recognition.continuous = false;
-      recognition.interimResults = false;
-
-      recognition.onresult = (event) => {
-        inputText.value = event.results[0][0].transcript;
-      };
-      recognition.onstart = () => {
-        startMic.disabled = true;
-        stopMic.disabled = false;
-      };
-      recognition.onend = () => {
-        startMic.disabled = false;
-        stopMic.disabled = true;
-      };
-      recognition.onerror = () => {
-        startMic.disabled = false;
-        stopMic.disabled = true;
-      };
+      recognition.lang = langFrom.value;
+      recognition.start();
     }
+  };
 
-    startMic.onclick = () => {
-      if (recognition) {
-        recognition.lang = langFrom.value;
-        recognition.start();
-      }
-    };
+  stopMic.onclick = () => {
+    if (recognition) recognition.stop();
+  };
 
-    stopMic.onclick = () => {
-      if (recognition) recognition.stop();
-    };
+  function getTodayDate() {
+    const d = new Date();
+    return d.toISOString().split('T')[0];
+  }
 
-    function getTodayDate() {
-      const d = new Date();
-      return d.toISOString().split('T')[0];
-    }
+  function loadSavedTranslations() {
+    const today = getTodayDate();
+    let savedData = localStorage.getItem('savedTranslations');
+    if (!savedData) return [];
 
-    function loadSavedTranslations() {
-      const today = getTodayDate();
-      let savedData = localStorage.getItem('savedTranslations');
-      if (!savedData) return [];
-
-      try {
-        const allSaved = JSON.parse(savedData);
-        if (allSaved.date !== today) {
-          localStorage.removeItem('savedTranslations');
-          return [];
-        }
-        return allSaved.translations || [];
-      } catch {
+    try {
+      const allSaved = JSON.parse(savedData);
+      if (allSaved.date !== today) {
         localStorage.removeItem('savedTranslations');
         return [];
       }
+      return allSaved.translations || [];
+    } catch {
+      localStorage.removeItem('savedTranslations');
+      return [];
     }
+  }
 
-    function saveTranslations(translations) {
-      const today = getTodayDate();
-      localStorage.setItem('savedTranslations', JSON.stringify({
-        date: today,
-        translations: translations
-      }));
+  function saveTranslations(translations) {
+    const today = getTodayDate();
+    localStorage.setItem('savedTranslations', JSON.stringify({
+      date: today,
+      translations: translations
+    }));
+  }
+
+  function renderSavedTranslations() {
+    translationsList.innerHTML = '';
+    const translations = loadSavedTranslations();
+    if (translations.length === 0) {
+      translationsList.innerHTML = '<li>Nessuna traduzione salvata oggi.</li>';
+      return;
     }
+    translations.forEach(t => {
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <strong>${t.input}</strong> <span class="lang-label">→ ${t.output}</span>
+        <span class="lang-label">${t.from.toUpperCase()} → ${t.to.toUpperCase()}</span>
+      `;
+      translationsList.appendChild(li);
+    });
+  }
 
-    function renderSavedTranslations() {
-      translationsList.innerHTML = '';
-      const translations = loadSavedTranslations();
-      if (translations.length === 0) {
-        translationsList.innerHTML = '<li>Nessuna traduzione salvata oggi.</li>';
-        return;
-      }
-      translations.forEach(t => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <strong>${t.input}</strong> <span class="lang-label">→ ${t.output}</span>
-          <span class="lang-label">${t.from.toUpperCase()} → ${t.to.toUpperCase()}</span>
-        `;
-        translationsList.appendChild(li);
-      });
-    }
-
-    translateBtn.onclick = async () => {
-      const text = inputText.value.trim();
-      if (!text) return alert("Inserisci del testo.");
-      outputText.value = "Sto traducendo...";
-      try {
-        const res = await fetch(`https://lingva.ml/api/v1/${langFrom.value}/${langTo.value}/${encodeURIComponent(text)}`);
-        const data = await res.json();
+  translateBtn.onclick = async () => {
+    const text = inputText.value.trim();
+    if (!text) return alert("Inserisci del testo.");
+    outputText.value = "Sto traducendo...";
+    try {
+      const res = await fetch(`https://lingva.ml/api/v1/${langFrom.value}/${langTo.value}/${encodeURIComponent(text)}`);
+      const data = await res.json();
+      if (data.translation) {
         outputText.value = data.translation;
 
-        let saved = loadSavedTranslations();
-        if (saved.length < 20) {
-          saved.push({
-            input: text,
-            output: data.translation,
-            from: langFrom.value,
-            to: langTo.value
-          });
-          saveTranslations(saved);
-          renderSavedTranslations();
-        } else {
-          alert("Hai raggiunto il limite di 20 traduzioni salvate oggi.");
-        }
-      } catch (e) {
-        outputText.value = "Errore durante la traduzione.";
-      }
-    };
-
-    speakBtn.onclick = () => {
-      const text = outputText.value.trim();
-      if (!text) return;
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = langTo.value;
-      speechSynthesis.speak(utterance);
-    };
-
-    renderSavedTranslations();
-  </script>
-
-  <!-- INIZIO: Firebase Authentication -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script>
-    // Configurazione Firebase - Sostituisci con la tua reale
-    const firebaseConfig = {
-      apiKey: "LA_TUA_API_KEY",
-      authDomain: "IL_TUO_PROJECT_ID.firebaseapp.com",
-      projectId: "IL_TUO_PROJECT_ID",
-      storageBucket: "IL_TUO_PROJECT_ID.appspot.com",
-      messagingSenderId: "ID_MESSAGGIO",
-      appId: "ID_APP"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-
-    // Controllo se l'utente è loggato e email verificata
-    auth.onAuthStateChanged(user => {
-      if (!user || !user.emailVerified) {
-        window.location.href = 'login.html';
-      }
-    });
-
-    // Logout
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-      logoutBtn.onclick = () => {
-        auth.signOut().then(() => {
-          window.location.href = 'login.html';
+        // Salva traduzione
+        const translations = loadSavedTranslations();
+        translations.push({
+          input: text,
+          output: data.translation,
+          from: langFrom.value,
+          to: langTo.value
         });
-      };
-    }
-  </script>
-  <!-- FINE: Firebase Authentication -->
+        saveTranslations(translations);
+        renderSavedTranslations();
 
+      } else {
+        outputText.value = 'Errore nella traduzione.';
+      }
+    } catch (e) {
+      outputText.value = 'Errore di rete.';
+    }
+  };
+
+  speakBtn.onclick = () => {
+    const text = outputText.value;
+    if (!text) return;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = langTo.value;
+    speechSynthesis.speak(utterance);
+  };
+
+  // Carica traduzioni salvate al caricamento pagina
+  renderSavedTranslations();
+
+  // Chiudi modal cliccando fuori dal contenuto
+  settingsModal.onclick = (e) => {
+    if (e.target === settingsModal) settingsModal.style.display = 'none';
+  };
+
+</script>
 </body>
 </html>
