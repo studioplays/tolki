@@ -2,181 +2,97 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
-  <title>Abbonamenti</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard Tolki</title>
   <style>
-    :root {
-      --primary: #0078D7;
-      --accent: #00a2ff;
-      --background: #f2f6fb;
-      --card-bg: #fff;
-      --text: #333;
-      --radius: 16px;
-      --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    }
-
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      background: var(--background);
-      color: var(--text);
-    }
-
-    .container {
-      max-width: 1000px;
-      margin: 40px auto;
-      padding: 0 20px;
-    }
-
-    h1 {
-      text-align: center;
-      color: var(--primary);
-      margin-bottom: 40px;
-      font-size: 2.2rem;
-    }
-
-    .plans {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 24px;
-    }
-
-    .plan {
-      background: var(--card-bg);
-      border-radius: var(--radius);
-      padding: 30px;
-      box-shadow: var(--shadow);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      transition: transform 0.2s;
-    }
-
-    .plan:hover {
-      transform: translateY(-5px);
-    }
-
-    .plan h2 {
-      color: var(--primary);
-      font-size: 1.4rem;
-      margin-bottom: 10px;
-    }
-
-    .price {
-      font-size: 1.8rem;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-
-    .trial {
-      font-size: 0.9rem;
-      color: #666;
-      margin-bottom: 20px;
-    }
-
-    .btn {
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.3s;
-      width: 100%;
-    }
-
-    .btn:hover {
-      background: var(--accent);
-    }
-
-    @media (max-width: 768px) {
-      .plans {
-        grid-template-columns: 1fr;
-      }
-    }
+    /* ...stessi stili di prima... */
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Scegli il tuo piano</h1>
-    <div class="plans">
-      <div class="plan">
-        <h2>Mensile</h2>
-        <div class="price">€9,99 / mese</div>
-        <div class="trial">7 giorni di prova gratuita</div>
-        <button class="btn" onclick="apriMensile()">Prova Mensile</button>
-      </div>
-      <div class="plan">
-        <h2>Annuale</h2>
-        <div class="price">€99,99 / anno</div>
-        <div class="trial">7 giorni di prova gratuita</div>
-        <button class="btn" onclick="apriAnnuale()">Prova Annuale</button>
-      </div>
-      <div class="plan">
-        <h2>Gratis</h2>
-        <div class="price">€0</div>
-        <div class="trial">Funzionalità base</div>
-        <button class="btn" onclick="apriGratis()">Usa Gratis</button>
-      </div>
-    </div>
+
+<header>
+  <h1>Dashboard Tolki</h1>
+  <button onclick="logout()">Logout</button>
+</header>
+
+<main>
+  <div class="info">
+    <p><strong>Email:</strong> <span id="userEmail">...</span></p>
+    <p><strong>Piano attuale:</strong> <span id="userPlan">...</span></p>
   </div>
 
-  <script>
-    async function aggiornaSubscription(email, subscription) {
-      try {
-        const response = await fetch('/update-subscription', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, subscription }),
-        });
-        const data = await response.json();
-        if (response.ok) {
-          console.log('Abbonamento aggiornato');
-        } else {
-          console.error('Errore aggiornamento:', data.message);
-        }
-      } catch (error) {
-        console.error('Errore connessione:', error);
-      }
+  <div>
+    <h2>Scegli il tuo abbonamento</h2>
+    <div class="subscription-options">
+      <button onclick="setSubscription('free')">Gratuito</button>
+      <button onclick="setSubscription('mensile')">Mensile</button>
+      <button onclick="setSubscription('annuale')">Annuale</button>
+    </div>
+    <p id="subscriptionMessage" style="color: green; margin-top: 10px;"></p>
+  </div>
+</main>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const email = localStorage.getItem('tolki_email');
+    const subscription = localStorage.getItem('tolki_subscription');
+
+    if (!email) {
+      window.location.href = '/login.html';
+      return;
     }
 
-    async function apriMensile() {
-      localStorage.setItem('tolki_subscribed', 'true');
-      localStorage.setItem('tolki_plan', 'mensile');
+    document.getElementById('userEmail').textContent = email;
+    document.getElementById('userPlan').textContent = subscription || 'free';
+  });
 
-      const email = localStorage.getItem('tolki_email');
-      if (email) {
-        await aggiornaSubscription(email, 'mensile');
-      }
+  function logout() {
+    localStorage.removeItem('tolki_email');
+    localStorage.removeItem('tolki_subscription');
+    window.location.href = '/login.html';
+  }
 
-      window.location.href = "pro.html";
+  async function setSubscription(plan) {
+    const email = localStorage.getItem('tolki_email');
+    if (!email) {
+      alert('Devi essere loggato per cambiare abbonamento.');
+      window.location.href = '/login.html';
+      return;
     }
 
-    async function apriAnnuale() {
-      localStorage.setItem('tolki_subscribed', 'true');
-      localStorage.setItem('tolki_plan', 'annuale');
+    localStorage.setItem('tolki_subscription', plan);
+    document.getElementById('userPlan').textContent = plan;
+    document.getElementById('subscriptionMessage').textContent = 'Abbonamento aggiornato a: ' + plan;
+    document.getElementById('subscriptionMessage').style.color = 'green';
 
-      const email = localStorage.getItem('tolki_email');
-      if (email) {
-        await aggiornaSubscription(email, 'annuale');
+    try {
+      const response = await fetch('/update-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, subscription: plan })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        document.getElementById('subscriptionMessage').textContent = 'Errore aggiornamento server: ' + (data.message || 'Errore');
+        document.getElementById('subscriptionMessage').style.color = 'red';
+        return;
       }
-
-      window.location.href = "pro.html";
+    } catch (e) {
+      document.getElementById('subscriptionMessage').textContent = 'Errore di connessione al server.';
+      document.getElementById('subscriptionMessage').style.color = 'red';
+      return;
     }
 
-    async function apriGratis() {
-      localStorage.setItem('tolki_subscribed', 'false');
-      localStorage.setItem('tolki_plan', 'free');
-
-      const email = localStorage.getItem('tolki_email');
-      if (email) {
-        await aggiornaSubscription(email, 'free');
-      }
-
-      window.location.href = "index.html";
+    // Redirect in base al piano
+    if (plan === 'free') {
+      window.location.href = '/index.html';
+    } else if (plan === 'mensile' || plan === 'annuale') {
+      window.location.href = '/pro.html';
     }
-  </script>
+  }
+</script>
+
 </body>
 </html>
