@@ -258,8 +258,19 @@
 
 <script>
   // Controllo login all'apertura pagina
-  if (!localStorage.getItem('loggedInUser')) {
+  const loggedInUser = localStorage.getItem('loggedInUser');
+  if (!loggedInUser) {
+    alert('Devi effettuare il login per accedere.');
     window.location.href = 'login.html';
+  } else {
+    // Mostro messaggio di benvenuto nella barra in alto
+    const headerButtons = document.querySelector('.header-buttons');
+    const welcomeSpan = document.createElement('span');
+    welcomeSpan.style.color = 'white';
+    welcomeSpan.style.fontWeight = '600';
+    welcomeSpan.style.marginRight = '15px';
+    welcomeSpan.textContent = `Benvenuto, ${loggedInUser}`;
+    headerButtons.insertBefore(welcomeSpan, headerButtons.firstChild);
   }
 
   const inputText = document.getElementById('inputText');
@@ -276,12 +287,15 @@
   const logoutBtn = document.getElementById('logoutBtn');
   const goProBtn = document.getElementById('goProBtn');
 
-  const savedTranslationsDiv = document.getElementById('savedTranslations');
   const translationsList = document.getElementById('translationsList');
 
-  openSettings.onclick = () => settingsModal.style.display = 'flex';
+  openSettings.onclick = () => {
+    settingsModal.style.display = 'flex';
+  };
+
   logoutBtn.onclick = () => {
     localStorage.removeItem('loggedInUser');
+    alert('Logout effettuato con successo!');
     window.location.href = 'login.html';
   };
 
@@ -289,7 +303,7 @@
     window.location.href = 'pro.html';
   };
 
-  // Speech Recognition
+  // Speech Recognition setup
   let recognition;
   if ('webkitSpeechRecognition' in window) {
     recognition = new webkitSpeechRecognition();
@@ -315,6 +329,7 @@
     recognition.onerror = () => {
       startMic.disabled = false;
       stopMic.disabled = true;
+      alert('Errore nel riconoscimento vocale');
     };
   }
 
@@ -322,6 +337,8 @@
     if (recognition) {
       recognition.lang = langFrom.value;
       recognition.start();
+    } else {
+      alert('Speech Recognition non supportato dal browser.');
     }
   };
 
@@ -356,63 +373,91 @@
     const today = getTodayDate();
     localStorage.setItem('savedTranslations', JSON.stringify({
       date: today,
-      translations: translations
+      translations
     }));
   }
 
-  function renderSavedTranslations() {
+  function addTranslation(origText, translatedText, fromLang, toLang) {
+    let translations = loadSavedTranslations();
+    if (translations.length >= 20) {
+      alert('Hai raggiunto il limite di 20 traduzioni salvate per oggi.');
+      return false;
+    }
+    translations.unshift({
+      original: origText,
+      translated: translatedText,
+      from: fromLang,
+      to: toLang,
+      time: new Date().toLocaleTimeString()
+    });
+    saveTranslations(translations);
+    displaySavedTranslations();
+    return true;
+  }
+
+  function displaySavedTranslations() {
     translationsList.innerHTML = '';
-    const translations = loadSavedTranslations();
+    let translations = loadSavedTranslations();
     if (translations.length === 0) {
       translationsList.innerHTML = '<li>Nessuna traduzione salvata oggi.</li>';
       return;
     }
-    translations.forEach(t => {
+    for (const t of translations) {
       const li = document.createElement('li');
+      li.title = `Salvato alle ${t.time}`;
       li.innerHTML = `
-        <strong>${t.input}</strong> <span class="lang-label">→ ${t.output}</span>
-        <span class="lang-label">${t.from.toUpperCase()} → ${t.to.toUpperCase()}</span>
+        <strong>Da ${t.from.toUpperCase()} a ${t.to.toUpperCase()}</strong>
+        <br/>
+        <span class="translation-text">${t.original}</span>
+        <span class="translation-text" style="color:#0078D7; font-weight:700;">→ ${t.translated}</span>
       `;
       translationsList.appendChild(li);
-    });
+    }
   }
+
+  displaySavedTranslations();
 
   translateBtn.onclick = async () => {
     const text = inputText.value.trim();
-    if (!text) return alert("Inserisci del testo.");
-    outputText.value = "Sto traducendo...";
+    if (!text) {
+      alert('Inserisci un testo da tradurre.');
+      return;
+    }
+    if (langFrom.value === langTo.value) {
+      alert('Seleziona lingue diverse per la traduzione.');
+      return;
+    }
+    translateBtn.disabled = true;
+    translateBtn.textContent = 'Traducendo...';
+
     try {
       const res = await fetch(`https://lingva.ml/api/v1/${langFrom.value}/${langTo.value}/${encodeURIComponent(text)}`);
+      if (!res.ok) throw new Error('Errore traduzione');
       const data = await res.json();
       outputText.value = data.translation;
 
-      let saved = loadSavedTranslations();
-      if (saved.length < 20) {
-        saved.push({
-          input: text,
-          output: data.translation,
-          from: langFrom.value,
-          to: langTo.value
-        });
-        saveTranslations(saved);
-        renderSavedTranslations();
-      } else {
-        alert("Hai raggiunto il limite di 20 traduzioni salvate oggi.");
-      }
+      // Salvo la traduzione
+      addTranslation(text, data.translation, langFrom.value, langTo.value);
     } catch (e) {
-      outputText.value = "Errore durante la traduzione.";
+      alert('Errore nella traduzione. Riprova più tardi.');
+      outputText.value = '';
+    } finally {
+      translateBtn.disabled = false;
+      translateBtn.textContent = '🔄 Traduci';
     }
   };
 
   speakBtn.onclick = () => {
     const text = outputText.value.trim();
-    if (!text) return;
+    if (!text) {
+      alert('Nessun testo tradotto da leggere.');
+      return;
+    }
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = langTo.value;
     speechSynthesis.speak(utterance);
   };
 
-  renderSavedTranslations();
 </script>
 </body>
 </html>
