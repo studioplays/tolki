@@ -4,40 +4,29 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Serve la cartella public come statica
+app.use(express.json());
+
+// Serve i file statici nella cartella public
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Rotta root
+// Se qualcuno visita la root, serve login.html
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-// Endpoint login
+// Esempio API login (da adattare alla tua logica)
 app.post('/login', (req, res) => {
-  // Simuliamo utenti per test
-  const users = {
-    'utente@example.com': { password: 'password123', subscription: 'free' },
-    'pro@example.com': { password: 'password123', subscription: 'pro' },
-  };
-
   const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Email e password richiesti' });
+  // TODO: metti qui la logica di controllo login (es. controlla users.json)
+  
+  if(email === 'admin@example.com' && password === '123456'){
+    return res.json({ subscription: 'pro' });
   }
-
-  if (!users[email]) {
-    return res.status(401).json({ message: 'Utente non trovato' });
-  }
-
-  if (users[email].password !== password) {
-    return res.status(401).json({ message: 'Password errata' });
-  }
-
-  return res.json({ message: 'Login riuscito', subscription: users[email].subscription });
+  
+  res.status(401).json({ message: 'Credenziali errate' });
 });
 
-// Catch all per pagine non trovate
+// Per tutte le altre rotte che non esistono
 app.use((req, res) => {
   res.status(404).send('Pagina non trovata');
 });
