@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tolki - Versione Free</title>
   <style>
+    /* --- Tutto il tuo CSS originale senza modifiche --- */
     * {
       box-sizing: border-box;
     }
@@ -33,7 +34,6 @@
       align-items: center;
     }
 
-    /* Pulsante “Passa a Pro” leggermente più grande */
     .btn-pro {
       background-color: #ff9800;
       border: none;
@@ -52,7 +52,6 @@
       background-color: #e68900;
     }
 
-    /* Pulsante Impostazioni piccolo */
     .btn-settings {
       background: transparent;
       border: none;
@@ -118,7 +117,6 @@
       background-color: #999;
     }
 
-    /* Popup settings */
     .modal {
       display: none;
       position: fixed;
@@ -142,7 +140,6 @@
       margin-top: 10px;
     }
 
-    /* --- NUOVA GRAFICA TRADUZIONI SALVATE --- */
     #savedTranslations {
       margin-top: 30px;
       background: #f9fafb;
@@ -245,14 +242,12 @@
     <label for="outputText">Testo tradotto</label>
     <textarea id="outputText" readonly placeholder="Risultato..."></textarea>
 
-    <!-- NUOVA SEZIONE TRADUZIONI SALVATE -->
     <div id="savedTranslations">
       <h3>Traduzioni Salvate Oggi</h3>
       <ul id="translationsList"></ul>
     </div>
   </div>
 
-  <!-- Settings Modal -->
   <div class="modal" id="settingsModal">
     <div class="modal-content">
       <h3>Impostazioni</h3>
@@ -262,6 +257,11 @@
   </div>
 
 <script>
+  // Controllo login all'apertura pagina
+  if (!localStorage.getItem('loggedInUser')) {
+    window.location.href = 'login.html';
+  }
+
   const inputText = document.getElementById('inputText');
   const outputText = document.getElementById('outputText');
   const langFrom = document.getElementById('langFrom');
@@ -329,13 +329,11 @@
     if (recognition) recognition.stop();
   };
 
-  // Funzione per ottenere la data in formato YYYY-MM-DD
   function getTodayDate() {
     const d = new Date();
     return d.toISOString().split('T')[0];
   }
 
-  // Carica traduzioni salvate per oggi da localStorage
   function loadSavedTranslations() {
     const today = getTodayDate();
     let savedData = localStorage.getItem('savedTranslations');
@@ -354,7 +352,6 @@
     }
   }
 
-  // Salva traduzioni per oggi in localStorage
   function saveTranslations(translations) {
     const today = getTodayDate();
     localStorage.setItem('savedTranslations', JSON.stringify({
@@ -363,7 +360,6 @@
     }));
   }
 
-  // Aggiorna la UI con le traduzioni salvate
   function renderSavedTranslations() {
     translationsList.innerHTML = '';
     const translations = loadSavedTranslations();
@@ -417,10 +413,6 @@
   };
 
   renderSavedTranslations();
-
-  if (!localStorage.getItem('loggedInUser')) {
-    window.location.href = 'login.html';
-  }
 </script>
 </body>
 </html>
