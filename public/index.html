@@ -257,8 +257,15 @@
   </div>
 
 <script>
-  // --- CHECK LOGIN SEMPLICE ---
-  if (localStorage.getItem('isLoggedIn') !== 'true') {
+  // FUNZIONI COOKIE UTILI
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+
+  // Controllo login tramite cookie
+  if (!getCookie('tolkiUser')) {
     window.location.href = 'login.html';
   }
 
@@ -281,8 +288,8 @@
 
   openSettings.onclick = () => settingsModal.style.display = 'flex';
   logoutBtn.onclick = () => {
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('userEmail');
+    // Cancella cookie tolkiUser e ritorna a login
+    document.cookie = "tolkiUser=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     window.location.href = 'login.html';
   };
 
@@ -323,6 +330,8 @@
     if (recognition) {
       recognition.lang = langFrom.value;
       recognition.start();
+    } else {
+      alert('Speech Recognition non supportato in questo browser.');
     }
   };
 
@@ -330,99 +339,93 @@
     if (recognition) recognition.stop();
   };
 
-  function getTodayDate() {
-    const d = new Date();
-    return d.toISOString().split('T')[0];
+  // Funzione traduci (simulazione, puoi collegarti a API reale)
+  async function traduciTesto(text, from, to) {
+    // MOCK: semplicemente ritorna testo invertito + lingua
+    return `[${from}→${to}] ${text.split('').reverse().join('')}`;
   }
 
-  function loadSavedTranslations() {
-    const today = getTodayDate();
-    let savedData = localStorage.getItem('savedTranslations');
-    if (!savedData) return [];
+  // Salvataggio traduzioni su localStorage (solo di oggi)
+  function salvaTraduzione(textOriginale, textTradotto, from, to) {
+    const oggi = new Date().toISOString().slice(0,10);
+    let traduzioni = JSON.parse(localStorage.getItem('traduzioniTolki') || '{}');
 
-    try {
-      const allSaved = JSON.parse(savedData);
-      if (allSaved.date !== today) {
-        localStorage.removeItem('savedTranslations');
-        return [];
-      }
-      return allSaved.translations || [];
-    } catch {
-      localStorage.removeItem('savedTranslations');
-      return [];
-    }
-  }
+    if (!traduzioni[oggi]) traduzioni[oggi] = [];
 
-  function saveTranslations(translations) {
-    const today = getTodayDate();
-    localStorage.setItem('savedTranslations', JSON.stringify({
-      date: today,
-      translations: translations
-    }));
-  }
-
-  function renderSavedTranslations() {
-    translationsList.innerHTML = '';
-    const translations = loadSavedTranslations();
-    if (translations.length === 0) {
-      translationsList.innerHTML = '<li>Nessuna traduzione salvata oggi.</li>';
-      return;
-    }
-    translations.forEach(t => {
-      const li = document.createElement('li');
-      li.innerHTML = `
-        <strong>${t.input}</strong> <span class="lang-label">→ ${t.output}</span>
-        <span class="lang-label">${t.from.toUpperCase()} → ${t.to.toUpperCase()}</span>
-      `;
-      translationsList.appendChild(li);
+    traduzioni[oggi].push({
+      from,
+      to,
+      original: textOriginale,
+      translated: textTradotto,
+      timestamp: new Date().toISOString()
     });
+
+    localStorage.setItem('traduzioniTolki', JSON.stringify(traduzioni));
+    caricaTraduzioni();
+  }
+
+  // Carica e mostra traduzioni salvate oggi
+  function caricaTraduzioni() {
+    const oggi = new Date().toISOString().slice(0,10);
+    let traduzioni = JSON.parse(localStorage.getItem('traduzioniTolki') || '{}');
+
+    translationsList.innerHTML = '';
+    if (traduzioni[oggi] && traduzioni[oggi].length > 0) {
+      traduzioni[oggi].forEach(trad => {
+        const li = document.createElement('li');
+        li.innerHTML = `<strong>${trad.original}</strong> <span class="lang-label">${trad.from} → ${trad.to}</span><br/><span class="translation-text">${trad.translated}</span>`;
+        translationsList.appendChild(li);
+      });
+    } else {
+      translationsList.innerHTML = '<li>Nessuna traduzione salvata oggi.</li>';
+    }
   }
 
   translateBtn.onclick = async () => {
-    const text = inputText.value.trim();
-    if (!text) return alert("Inserisci del testo.");
-    outputText.value = "Sto traducendo...";
+    const testo = inputText.value.trim();
+    if (!testo) return alert('Inserisci un testo da tradurre');
+
+    translateBtn.disabled = true;
+    translateBtn.textContent = 'Traduzione in corso...';
+
     try {
-      const res = await fetch(`https://lingva.ml/api/v1/${langFrom.value}/${langTo.value}/${encodeURIComponent(text)}`);
-      const data = await res.json();
-      if (data.translation) {
-        outputText.value = data.translation;
+      const tradotto = await traduciTesto(testo, langFrom.value, langTo.value);
+      outputText.value = tradotto;
+      salvaTraduzione(testo, tradotto, langFrom.value, langTo.value);
+    } catch(e) {
+      alert('Errore durante la traduzione.');
+    }
 
-        // Salva traduzione
-        const translations = loadSavedTranslations();
-        translations.push({
-          input: text,
-          output: data.translation,
-          from: langFrom.value,
-          to: langTo.value
-        });
-        saveTranslations(translations);
-        renderSavedTranslations();
+    translateBtn.disabled = false;
+    translateBtn.textContent = '🔄 Traduci';
+  };
 
-      } else {
-        outputText.value = 'Errore nella traduzione.';
-      }
-    } catch (e) {
-      outputText.value = 'Errore di rete.';
+  // Sintesi vocale
+  speakBtn.onclick = () => {
+    const testoDaLeggere = outputText.value.trim();
+    if (!testoDaLeggere) return alert('Non c\'è nulla da leggere.');
+
+    const synth = window.speechSynthesis;
+    if (!synth) {
+      alert('Sintesi vocale non supportata nel browser.');
+      return;
+    }
+    const utterance = new SpeechSynthesisUtterance(testoDaLeggere);
+    utterance.lang = langTo.value;
+    synth.speak(utterance);
+  };
+
+  // Carica traduzioni all’avvio
+  caricaTraduzioni();
+
+  // Chiudi modal cliccando fuori dal contenuto
+  window.onclick = (e) => {
+    if (e.target === settingsModal) {
+      settingsModal.style.display = 'none';
     }
   };
 
-  speakBtn.onclick = () => {
-    const text = outputText.value;
-    if (!text) return;
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = langTo.value;
-    speechSynthesis.speak(utterance);
-  };
-
-  // Carica traduzioni salvate al caricamento pagina
-  renderSavedTranslations();
-
-  // Chiudi modal cliccando fuori dal contenuto
-  settingsModal.onclick = (e) => {
-    if (e.target === settingsModal) settingsModal.style.display = 'none';
-  };
-
 </script>
+
 </body>
 </html>
