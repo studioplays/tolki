@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Tolki - Gestione Utenti</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to right, #ece9e6, #ffffff);
+      padding: 40px 20px;
+      margin: 0;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #4A90E2;
+    }
+    table {
+      width: 100%;
+      max-width: 700px;
+      margin: 0 auto 40px auto;
+      border-collapse: collapse;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      background: white;
+    }
+    th, td {
+      padding: 15px 20px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+      font-size: 1rem;
+    }
+    th {
+      background-color: #4A90E2;
+      color: white;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    button.deleteBtn {
+      padding: 6px 14px;
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.3s ease;
+    }
+    button.deleteBtn:hover {
+      background-color: #c0392b;
+    }
+    #logoutBtn {
+      display: block;
+      margin: 0 auto;
+      padding: 12px 25px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: white;
+      background-color: #4A90E2;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #logoutBtn:hover {
+      background-color: #357ABD;
+    }
+    #noUsers {
+      text-align: center;
+      font-style: italic;
+      color: #777;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Area Amministratore - Utenti Registrati</h1>
+
+<table id="usersTable">
+  <thead>
+    <tr>
+      <th>Email</th>
+      <th>Abbonamento</th>
+      <th>Azioni</th>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+
+<div id="noUsers" style="display:none;">Nessun utente registrato.</div>
+
+<button id="logoutBtn">Logout</button>
+
+<script>
+  const ADMIN_USERNAME = 'AMMINISTRATORE99';
+
+  if (localStorage.getItem('loggedInAdmin') !== ADMIN_USERNAME) {
+    alert('Accesso non autorizzato. Effettua il login come amministratore.');
+    window.location.href = 'login.html';
+  }
+
+  const usersTableBody = document.querySelector('#usersTable tbody');
+  const noUsersDiv = document.getElementById('noUsers');
+
+  async function loadUsers() {
+    try {
+      const res = await fetch('/users', {
+        headers: { 'x-admin': ADMIN_USERNAME }
+      });
+
+      if (!res.ok) throw new Error('Errore nel caricamento utenti');
+
+      const users = await res.json();
+
+      if (users.length === 0) {
+        noUsersDiv.style.display = 'block';
+        document.getElementById('usersTable').style.display = 'none';
+        return;
+      }
+
+      noUsersDiv.style.display = 'none';
+      document.getElementById('usersTable').style.display = 'table';
+
+      usersTableBody.innerHTML = '';
+
+      users.forEach(user => {
+        const tr = document.createElement('tr');
+
+        const tdEmail = document.createElement('td');
+        tdEmail.textContent = user.email;
+
+        const tdSub = document.createElement('td');
+        tdSub.textContent = user.subscription === 'pro' ? 'PRO' : 'FREE';
+
+        const tdActions = document.createElement('td');
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Elimina';
+        delBtn.classList.add('deleteBtn');
+        delBtn.onclick = async () => {
+          if (confirm(`Sei sicuro di voler eliminare l'account "${user.email}"?`)) {
+            await deleteUser(user.email);
+          }
+        };
+        tdActions.appendChild(delBtn);
+
+        tr.appendChild(tdEmail);
+        tr.appendChild(tdSub);
+        tr.appendChild(tdActions);
+
+        usersTableBody.appendChild(tr);
+      });
+
+    } catch (err) {
+      alert('Errore caricamento utenti.');
+      console.error(err);
+    }
+  }
+
+  async function deleteUser(email) {
+    try {
+      const res = await fetch('/delete-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin': ADMIN_USERNAME
+        },
+        body: JSON.stringify({ email })
+      });
+
+      if (!res.ok) throw new Error('Errore eliminazione utente');
+
+      alert('Utente eliminato con successo');
+      loadUsers();
+
+    } catch (err) {
+      alert('Errore durante l\'eliminazione utente.');
+      console.error(err);
+    }
+  }
+
+  document.getElementById('logoutBtn').onclick = () => {
+    localStorage.removeItem('loggedInAdmin');
+    window.location.href = 'login.html';
+  };
+
+  loadUsers();
+</script>
+
+</body>
+</html>

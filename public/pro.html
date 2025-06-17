@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tolki - Versione Pro</title>
+  <style>
+    /* ... Tuo CSS senza modifiche ... */
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #0078D7;
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+    .settings-btn {
+      background: white;
+      color: #0078D7;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .top-right-buttons {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    #profileBtn {
+      position: relative;
+      width: 40px;
+      height: 40px;
+      background-color: white;
+      border-radius: 50%;
+      border: 2px solid #0078D7;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #profileBtn::before {
+      content: '';
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      width: 18px;
+      height: 18px;
+      background-color: #0078D7;
+      border-radius: 50%;
+      border: 2px solid white;
+      box-sizing: content-box;
+    }
+    #profileBtn img {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+    }
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    label {
+      margin-top: 15px;
+      display: block;
+      font-weight: 600;
+    }
+    select, textarea, input, button {
+      width: 100%;
+      margin-top: 8px;
+      padding: 12px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .small-btn {
+      flex: 1;
+      font-size: 0.9rem;
+      padding: 10px;
+      background-color: #0078D7;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .small-btn:disabled {
+      background-color: #999;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 200;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.4);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      text-align: center;
+      max-width: 400px;
+      z-index: 201;
+    }
+    .modal-content.large {
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      text-align: left;
+    }
+    /* Barra di ricerca modal emergenza */
+    #searchEmergencyInput {
+      width: 100%;
+      padding: 10px 12px;
+      margin-bottom: 15px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    #searchBtn {
+      padding: 10px 16px;
+      font-weight: 700;
+      background-color: #d32f2f;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+    #searchBtn:hover {
+      background-color: #b71c1c;
+    }
+    /* Pulsante logout in modal */
+    #logoutBtn {
+      margin-top: 20px;
+      padding: 12px 20px;
+      font-weight: 700;
+      background-color: #d32f2f;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 1rem;
+      transition: background-color 0.3s ease;
+    }
+    #logoutBtn:hover {
+      background-color: #b71c1c;
+    }
+    /* Select stato emergenza */
+    #stateSelect {
+      margin-bottom: 15px;
+      padding: 10px 12px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      width: 100%;
+    }
+    #organizeTripBtn {
+      background-color: #0078D7; /* blu coerente col tema */
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0, 120, 215, 0.4);
+      transition: background-color 0.3s ease;
+    }
+    #organizeTripBtn:hover {
+      background-color: #005a9e;
+    }
+  </style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+</head>
+<body>
+
+  <header>
+    <h1>Tolki, il tuo assistente virtuale da viaggio - PRO</h1>
+    <div class="top-right-buttons">
+      <button class="settings-btn" id="openSettings">⚙️ Impostazioni</button>
+      <button id="organizeTripBtn" title="Organizza il tuo prossimo viaggio">Organizza il tuo prossimo viaggio</button>
+    </div>
+  </header>
+
+  <div class="container">
+   <label for="langFrom">Lingua originale</label>
+<select id="langFrom">
+  <option value="af">Afrikaans</option>
+  <option value="sq">Albanese</option>
+  <option value="am">Amharico</option>
+  <option value="ar">Arabo</option>
+  <option value="hy">Armeno</option>
+  <option value="az">Azero</option>
+  <option value="eu">Basco</option>
+  <option value="be">Bielorusso</option>
+  <option value="bn">Bengalese</option>
+  <option value="bs">Bosniaco</option>
+  <option value="bg">Bulgaro</option>
+  <option value="ca">Catalano</option>
+  <option value="ceb">Cebuano</option>
+  <option value="ny">Chichewa</option>
+  <option value="zh">Cinese</option>
+  <option value="co">Corso</option>
+  <option value="hr">Croato</option>
+  <option value="cs">Ceco</option>
+  <option value="da">Danese</option>
+  <option value="nl">Olandese</option>
+  <option value="en" selected>Inglese</option>
+  <option value="eo">Esperanto</option>
+  <option value="et">Estone</option>
+  <option value="tl">Filippino</option>
+  <option value="fi">Finlandese</option>
+  <option value="fr">Francese</option>
+  <option value="fy">Frisone</option>
+  <option value="gl">Galiziano</option>
+  <option value="ka">Georgiano</option>
+  <option value="de">Tedesco</option>
+  <option value="el">Greco</option>
+  <option value="gu">Gujarati</option>
+  <option value="ht">Haitiano</option>
+  <option value="ha">Hausa</option>
+  <option value="haw">Hawaiano</option>
+  <option value="he">Ebraico</option>
+  <option value="hi">Hindi</option>
+  <option value="hmn">Hmong</option>
+  <option value="hu">Ungherese</option>
+  <option value="is">Islandese</option>
+  <option value="ig">Igbo</option>
+  <option value="id">Indonesiano</option>
+  <option value="ga">Irlandese</option>
+  <option value="it" selected>Italiano</option>
+  <option value="ja">Giapponese</option>
+  <option value="jw">Giavanese</option>
+  <option value="kn">Kannada</option>
+  <option value="kk">Kazako</option>
+  <option value="km">Khmer</option>
+  <option value="ko">Coreano</option>
+  <option value="ku">Curdo (Kurmanji)</option>
+  <option value="ky">Kirghiso</option>
+  <option value="lo">Lao</option>
+  <option value="la">Latino</option>
+  <option value="lv">Lettone</option>
+  <option value="lt">Lituano</option>
+  <option value="lb">Lussemburghese</option>
+  <option value="mk">Macedone</option>
+  <option value="mg">Malagasy</option>
+  <option value="ms">Malese</option>
+  <option value="ml">Maltese</option>
+  <option value="mt">Maltese</option>
+  <option value="mi">Maori</option>
+  <option value="mr">Marathi</option>
+  <option value="mn">Mongolo</option>
+  <option value="my">Myanmar (Birmano)</option>
+  <option value="ne">Nepalese</option>
+  <option value="no">Norvegese</option>
+  <option value="ps">Pashto</option>
+  <option value="fa">Persiano</option>
+  <option value="pl">Polacco</option>
+  <option value="pt">Portoghese</option>
+  <option value="pa">Punjabi</option>
+  <option value="ro">Rumeno</option>
+  <option value="ru">Russo</option>
+  <option value="sm">Samoano</option>
+  <option value="gd">Gaelico scozzese</option>
+  <option value="sr">Serbo</option>
+  <option value="st">Sesotho</option>
+  <option value="sn">Shona</option>
+  <option value="sd">Sindhi</option>
+  <option value="si">Singalese</option>
+  <option value="sk">Slovacco</option>
+  <option value="sl">Sloveno</option>
+  <option value="so">Somalo</option>
+  <option value="es">Spagnolo</option>
+  <option value="su">Sundanese</option>
+  <option value="sw">Swahili</option>
+  <option value="sv">Svedese</option>
+  <option value="tg">Tagiko</option>
+  <option value="ta">Tamil</option>
+  <option value="te">Telugu</option>
+  <option value="th">Thailandese</option>
+  <option value="tr">Turco</option>
+  <option value="uk">Ucraino</option>
+  <option value="ur">Urdu</option>
+  <option value="uz">Uzbeco</option>
+  <option value="vi">Vietnamita</option>
+  <option value="cy">Gallese</option>
+  <option value="xh">Xhosa</option>
+  <option value="yi">Yiddish</option>
+  <option value="yo">Yoruba</option>
+  <option value="zu">Zulu</option>
+</select>
+
+<label for="langTo">Lingua di destinazione</label>
+<select id="langTo">
+  <!-- stessa lista identica a langFrom -->
+  <!-- con magari la selezione predefinita su Inglese -->
+  <option value="af">Afrikaans</option>
+  <option value="sq">Albanese</option>
+  <option value="am">Amharico</option>
+  <option value="ar">Arabo</option>
+  <option value="hy">Armeno</option>
+  <option value="az">Azero</option>
+  <option value="eu">Basco</option>
+  <option value="be">Bielorusso</option>
+  <option value="bn">Bengalese</option>
+  <option value="bs">Bosniaco</option>
+  <option value="bg">Bulgaro</option>
+  <option value="ca">Catalano</option>
+  <option value="ceb">Cebuano</option>
+  <option value="ny">Chichewa</option>
+  <option value="zh">Cinese</option>
+  <option value="co">Corso</option>
+  <option value="hr">Croato</option>
+  <option value="cs">Ceco</option>
+  <option value="da">Danese</option>
+  <option value="nl">Olandese</option>
+  <option value="en" selected>Inglese</option>
+  <option value="eo">Esperanto</option>
+  <option value="et">Estone</option>
+  <option value="tl">Filippino</option>
+  <option value="fi">Finlandese</option>
+  <option value="fr">Francese</option>
+  <option value="fy">Frisone</option>
+  <option value="gl">Galiziano</option>
+  <option value="ka">Georgiano</option>
+  <option value="de">Tedesco</option>
+  <option value="el">Greco</option>
+  <option value="gu">Gujarati</option>
+  <option value="ht">Haitiano</option>
+  <option value="ha">Hausa</option>
+  <option value="haw">Hawaiano</option>
+  <option value="he">Ebraico</option>
+  <option value="hi">Hindi</option>
+  <option value="hmn">Hmong</option>
+  <option value="hu">Ungherese</option>
+  <option value="is">Islandese</option>
+  <option value="ig">Igbo</option>
+  <option value="id">Indonesiano</option>
+  <option value="ga">Irlandese</option>
+  <option value="it">Italiano</option>
+  <option value="ja">Giapponese</option>
+  <option value="jw">Giavanese</option>
+  <option value="kn">Kannada</option>
+  <option value="kk">Kazako</option>
+  <option value="km">Khmer</option>
+  <option value="ko">Coreano</option>
+  <option value="ku">Curdo (Kurmanji)</option>
+  <option value="ky">Kirghiso</option>
+  <option value="lo">Lao</option>
+  <option value="la">Latino</option>
+  <option value="lv">Lettone</option>
+  <option value="lt">Lituano</option>
+  <option value="lb">Lussemburghese</option>
+  <option value="mk">Macedone</option>
+  <option value="mg">Malagasy</option>
+  <option value="ms">Malese</option>
+  <option value="ml">Maltese</option>
+  <option value="mt">Maltese</option>
+  <option value="mi">Maori</option>
+  <option value="mr">Marathi</option>
+  <option value="mn">Mongolo</option>
+  <option value="my">Myanmar (Birmano)</option>
+  <option value="ne">Nepalese</option>
+  <option value="no">Norvegese</option>
+  <option value="ps">Pashto</option>
+  <option value="fa">Persiano</option>
+  <option value="pl">Polacco</option>
+  <option value="pt">Portoghese</option>
+  <option value="pa">Punjabi</option>
+  <option value="ro">Rumeno</option>
+  <option value="ru">Russo</option>
+  <option value="sm">Samoano</option>
+  <option value="gd">Gaelico scozzese</option>
+  <option value="sr">Serbo</option>
+  <option value="st">Sesotho</option>
+  <option value="sn">Shona</option>
+  <option value="sd">Sindhi</option>
+  <option value="si">Singalese</option>
+  <option value="sk">Slovacco</option>
+  <option value="sl">Sloveno</option>
+  <option value="so">Somalo</option>
+  <option value="es">Spagnolo</option>
+  <option value="su">Sundanese</option>
+  <option value="sw">Swahili</option>
+  <option value="sv">Svedese</option>
+  <option value="tg">Tagiko</option>
+  <option value="ta">Tamil</option>
+  <option value="te">Telugu</option>
+  <option value="th">Thailandese</option>
+  <option value="tr">Turco</option>
+  <option value="uk">Ucraino</option>
+  <option value="ur">Urdu</option>
+  <option value="uz">Uzbeco</option>
+  <option value="vi">Vietnamita</option>
+  <option value="cy">Gallese</option>
+  <option value="xh">Xhosa</option>
+  <option value="yi">Yiddish</option>
+  <option value="yo">Yoruba</option>
+  <option value="zu">Zulu</option>
+</select>
+
+    <label for="inputText">Testo da tradurre</label>
+    <textarea id="inputText" placeholder="Scrivi o parla..."></textarea>
+
+    <div class="btn-row">
+      <button id="startMic" class="small-btn">🎤 Inizia</button>
+      <button id="stopMic" class="small-btn" disabled>⏹️ Ferma</button>
+      <button id="translateBtn" class="small-btn">🔄 Traduci</button>
+      <button id="speakBtn" class="small-btn">🔈 Leggi</button>
+    </div>
+
+    <label for="outputText">Testo tradotto</label>
+    <textarea id="outputText" readonly placeholder="Risultato..."></textarea>
+
+<!-- Modal "Organizza il tuo viaggio" -->
+<div class="modal" id="organizeTripModal" style="display:none; justify-content:center; align-items:center; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index:10000;">
+  <div class="modal-content large" style="background:#fff; border-radius:10px; padding:20px; max-width:700px; width:90%; max-height:90vh; overflow-y:auto; position:relative; display:flex; flex-direction:column;">
+
+    <!-- Pulsante chiudi in alto a destra -->
+    <button id="closeTripModal" class="close-btn" style="background:none; border:none; font-size:24px; cursor:pointer; position:absolute; top:10px; right:15px;">&times;</button>
+
+    <h2 style="margin-bottom:15px;">Organizza il tuo prossimo viaggio</h2>
+
+    <!-- Barra pulsanti in alto -->
+    <div class="top-buttons" style="display:flex; gap:10px; margin-bottom:20px;">
+      <button type="button" id="btnAssicurazione" style="background:#1976d2; color:#fff; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Sicurezza sanitaria</button>
+      <button type="button" id="btnViaggiPassati" style="background:#1976d2; color:#fff; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Viaggi passati</button>
+      <button type="button" id="btnDiario" style="background:#1976d2; color:#fff; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Diario</button>
+      <button type="button" id="btnDocumenti" style="background:#1976d2; color:#fff; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Documenti</button>
+    </div>
+
+    <!-- Messaggi form -->
+    <div id="tripMessage" style="color:#d32f2f; font-weight:bold; margin-bottom:15px;"></div>
+
+    <!-- FORM con campo giorni aggiunto -->
+    <form id="tripForm" style="max-width: 600px; margin: 0 auto 30px auto;">
+      <div style="display:flex; gap:10px; align-items:flex-start; margin-bottom:15px;">
+        <div style="flex:2;">
+          <label for="destination">Destinazione</label><br />
+          <input type="text" id="destination" name="destination" required placeholder="Inserisci destinazione" style="width:100%; padding:8px;" />
+        </div>
+        <div style="flex:1;">
+          <label for="days">Giorni</label><br />
+          <input type="number" id="days" name="days" min="1" required placeholder="N° giorni" style="width:100%; padding:8px;" />
+        </div>
+      </div>
+
+      <label for="tripType">Tipo di viaggio</label><br />
+      <select id="tripType" name="tripType" required style="width:100%; padding:8px; margin-bottom:15px;">
+        <option value="">-- Seleziona tipo viaggio --</option>
+        <option value="cultura">Cultura</option>
+        <option value="avventura">Avventura</option>
+        <option value="gastronomia">Gastronomia</option>
+        <option value="relax">Relax</option>
+      </select>
+
+      <div style="display:flex; gap:10px;">
+        <button type="button" id="searchItineraryBtn" style="flex:1; padding:10px 15px; background:#4caf50; color:#fff; border:none; border-radius:5px; cursor:pointer;">Cerca</button>
+        <button type="submit" style="flex:1; padding:10px 15px; background:#1976d2; color:#fff; border:none; border-radius:5px; cursor:pointer;">Salva viaggio</button>
+      </div>
+    </form>
+
+    <h3>Viaggi organizzati (max 6 al mese)</h3>
+    <ul id="tripList" style="list-style:none; padding-left:0; margin-bottom:30px;"></ul>
+
+    <h3>Itinerario suggerito</h3>
+    <div id="itinerary" style="background:#f5f5f5; padding:15px; border-radius:8px; min-height: 80px;"></div>
+
+  </div>
+</div>
+
+<!-- Modal Viaggi Passati -->
+<div class="modal" id="pastTripsModal" style="display:none; justify-content:center; align-items:center; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index:11000;">
+  <div class="modal-content" style="background:#fff; border-radius:10px; padding:20px; max-width:600px; width:90%; max-height:80vh; overflow-y:auto; position:relative; display:flex; flex-direction:column;">
+    <button id="closePastTripsModal" class="close-btn" style="background:none; border:none; font-size:24px; cursor:pointer; position:absolute; top:10px; right:15px;">&times;</button>
+    <h2>Viaggi Passati</h2>
+    <ul id="pastTripsList" style="list-style:none; padding-left:0; margin-top:20px;"></ul>
+  </div>
+</div>
+
+<!-- Modal Diario Principale -->
+<div class="modal" id="diarioMainModal" style="display:none; justify-content:center; align-items:center; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index:12000;">
+  <div class="modal-content" style="background:#fff; border-radius:10px; padding:20px; max-width:600px; width:90%; max-height:80vh; overflow-y:auto; position:relative; display:flex; flex-direction:column;">
+    <button id="closeDiarioMainModal" class="close-btn" style="background:none; border:none; font-size:24px; cursor:pointer; position:absolute; top:10px; right:15px;">&times;</button>
+    <h2>Diario di Viaggio</h2>
+    <button id="btnNuovoDiario" style="padding:10px 15px; background:#1976d2; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-bottom:15px;">Nuovo</button>
+    <div id="savedEntriesContainer" style="overflow-y:auto; max-height:60vh;"></div>
+  </div>
+</div>
+
+<!-- Modal Nuovo Diario -->
+<div class="modal" id="newDiarioModal" style="display:none; justify-content:center; align-items:center; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index:13000;">
+  <div class="modal-content" style="background:#fff; border-radius:10px; padding:20px; max-width:600px; width:90%; max-height:80vh; overflow-y:auto; position:relative; display:flex; flex-direction:column;">
+    <button id="closeNewDiarioModal" class="close-btn" style="background:none; border:none; font-size:24px; cursor:pointer; position:absolute; top:10px; right:15px;">&times;</button>
+    <h2>Nuova Nota/Foto</h2>
+
+    <label for="diarioTitle">Titolo</label>
+    <input type="text" id="diarioTitle" style="padding:8px; margin-bottom:15px; width:100%; border:1px solid #ccc; border-radius:4px;" placeholder="Titolo della nota o foto" />
+
+    <label for="diarioText">Note</label>
+    <textarea id="diarioText" placeholder="Scrivi qui i tuoi appunti..." style="width:100%; height:150px; padding:10px; margin-bottom:15px; border:1px solid #ccc; border-radius:4px;"></textarea>
+
+    <button id="btnOpenCamera" style="padding:10px 15px; background:#1976d2; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-bottom:15px;">Scatta Foto</button>
+
+    <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;" />
+
+    <div id="previewPhoto" style="margin-bottom:15px;"></div>
+
+    <button id="btnSaveDiario" style="padding:10px 15px; background:#1976d2; color:#fff; border:none; border-radius:5px; cursor:pointer; align-self:flex-start;">Salva</button>
+  </div>
+</div>
+
+<!-- Modal Documenti -->
+<div class="modal" id="documentsModal" style="display:none; justify-content:center; align-items:flex-start; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index:14000;">
+  <div class="modal-content" style="background:#fff; border-radius:10px; padding:20px; max-width:600px; width:90%; max-height:90vh; overflow-y:auto; position:relative; display:flex; flex-direction:column;">
+    <button id="closeDocumentsModal" class="close-btn" style="background:none; border:none; font-size:24px; cursor:pointer; position:absolute; top:10px; right:15px;">&times;</button>
+    <h2>Documenti</h2>
+    <button id="scanDocumentsBtn" style="padding:10px 15px; background:#1976d2; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-bottom:15px; align-self:flex-start;">
+      Scannerizza documenti
+    </button>
+    <!-- Accetta solo immagini e apre fotocamera posteriore -->
+    <input type="file" id="documentScannerInput" accept="image/*" capture="environment" style="display:none;" multiple />
+    <div id="documentsList" style="max-height:70vh; overflow-y:auto;"></div>
+  </div>
+</div>
+<script>
+  // --- Funzione per aprire una modale ---
+  function openModal(modal) {
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden'; // blocca scroll body quando modale aperta
+  }
+
+  // --- Funzione per chiudere una modale ---
+  function closeModal(modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = ''; // riabilita scroll body
+  }
+
+  // --- Elementi modali ---
+  const organizeTripModal = document.getElementById('organizeTripModal');
+  const pastTripsModal = document.getElementById('pastTripsModal');
+  const diarioMainModal = document.getElementById('diarioMainModal');
+  const newDiarioModal = document.getElementById('newDiarioModal');
+  const documentsModal = document.getElementById('documentsModal');
+
+  // --- Pulsanti chiudi ---
+  document.getElementById('closeTripModal').onclick = () => closeModal(organizeTripModal);
+  document.getElementById('closePastTripsModal').onclick = () => closeModal(pastTripsModal);
+  document.getElementById('closeDiarioMainModal').onclick = () => closeModal(diarioMainModal);
+  document.getElementById('closeNewDiarioModal').onclick = () => closeModal(newDiarioModal);
+  document.getElementById('closeDocumentsModal').onclick = () => closeModal(documentsModal);
+
+  // --- Pulsanti top bar della modale Organizza Viaggio ---
+  document.getElementById('btnAssicurazione').onclick = () => alert('Sezione Sicurezza sanitaria ancora in costruzione.');
+  document.getElementById('btnViaggiPassati').onclick = () => openModal(pastTripsModal);
+  document.getElementById('btnDiario').onclick = () => openModal(diarioMainModal);
+  document.getElementById('btnDocumenti').onclick = () => openModal(documentsModal);
+
+  // --- Apri modale Organizza Viaggio solo con il bottone ---
+  document.getElementById('openOrganizeTripBtn').onclick = () => openModal(organizeTripModal);
+
+  // --- Funzioni e variabili per la gestione dei viaggi ---
+  const tripForm = document.getElementById('tripForm');
+  const tripList = document.getElementById('tripList');
+  const tripMessage = document.getElementById('tripMessage');
+  const itineraryDiv = document.getElementById('itinerary');
+
+  // Funzione per caricare viaggi da localStorage
+  function loadTrips() {
+    const tripsJSON = localStorage.getItem('organizedTrips');
+    return tripsJSON ? JSON.parse(tripsJSON) : [];
+  }
+
+  // Funzione per salvare viaggi in localStorage
+  function saveTrips(trips) {
+    localStorage.setItem('organizedTrips', JSON.stringify(trips));
+  }
+
+  // Funzione per mostrare lista viaggi
+  function renderTrips() {
+    const trips = loadTrips();
+    tripList.innerHTML = '';
+    if(trips.length === 0) {
+      tripList.innerHTML = '<li>Nessun viaggio organizzato.</li>';
+      return;
+    }
+    trips.forEach((trip, i) => {
+      const li = document.createElement('li');
+      li.textContent = `${trip.destination} - ${trip.days} giorni - Tipo: ${trip.tripType}`;
+      tripList.appendChild(li);
+    });
+  }
+
+  // Gestione submit form salvataggio viaggio
+  tripForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    tripMessage.textContent = '';
+    const destination = tripForm.destination.value.trim();
+    const days = parseInt(tripForm.days.value);
+    const tripType = tripForm.tripType.value;
+
+    if(!destination || !days || days < 1 || !tripType) {
+      tripMessage.textContent = 'Per favore compila tutti i campi correttamente.';
+      return;
+    }
+
+    // Limite 6 viaggi al mese - controllo semplice
+    const trips = loadTrips();
+    if(trips.length >= 6) {
+      tripMessage.textContent = 'Hai già organizzato 6 viaggi questo mese.';
+      return;
+    }
+
+    trips.push({destination, days, tripType, date: new Date().toISOString()});
+    saveTrips(trips);
+    renderTrips();
+    tripForm.reset();
+    itineraryDiv.innerHTML = '';
+  });
+
+  // Funzione per creare itinerario simulato (puoi modificare con dati reali)
+  function generateItinerary(destination, days, tripType) {
+    return `<p>Itinerario per <strong>${destination}</strong> di <strong>${days}</strong> giorni, tipo <strong>${tripType}</strong>:</p><ul>${Array(days).fill(null).map((_,i) => `<li>Giorno ${i+1}: Attività di ${tripType} a ${destination}</li>`).join('')}</ul>`;
+  }
+
+  // Bottone cerca itinerario
+  document.getElementById('searchItineraryBtn').onclick = () => {
+    const destination = tripForm.destination.value.trim();
+    const days = parseInt(tripForm.days.value);
+    const tripType = tripForm.tripType.value;
+
+    if(!destination || !days || days < 1 || !tripType) {
+      tripMessage.textContent = 'Per favore compila tutti i campi per vedere l\'itinerario.';
+      itineraryDiv.innerHTML = '';
+      return;
+    }
+    tripMessage.textContent = '';
+    itineraryDiv.innerHTML = generateItinerary(destination, days, tripType);
+  };
+
+  // Inizializzazione - mostra viaggi salvati
+  renderTrips();
+
+  // --- Gestione Viaggi Passati, Diario e Documenti ---
+  // Implementazioni placeholder, da espandere secondo necessità
+
+  // Viaggi Passati
+  const pastTripsList = document.getElementById('pastTripsList');
+  function renderPastTrips() {
+    // Esempio dummy dati
+    const pastTrips = [
+      {destination:'Roma', date:'2025-02-12'},
+      {destination:'Parigi', date:'2024-12-01'}
+    ];
+    pastTripsList.innerHTML = '';
+    pastTrips.forEach(trip => {
+      const li = document.createElement('li');
+      li.textContent = `${trip.destination} - ${trip.date}`;
+      pastTripsList.appendChild(li);
+    });
+  }
+  renderPastTrips();
+
+  // Diario di Viaggio - gestione apertura nuovo diario e salvataggio
+  const savedEntriesContainer = document.getElementById('savedEntriesContainer');
+  const btnNuovoDiario = document.getElementById('btnNuovoDiario');
+  const diarioTitle = document.getElementById('diarioTitle');
+  const diarioText = document.getElementById('diarioText');
+  const btnSaveDiario = document.getElementById('btnSaveDiario');
+  const previewPhoto = document.getElementById('previewPhoto');
+  const btnOpenCamera = document.getElementById('btnOpenCamera');
+  const cameraInput = document.getElementById('cameraInput');
+
+  let savedDiarioEntries = JSON.parse(localStorage.getItem('diarioEntries') || '[]');
+
+  function renderDiarioEntries() {
+    savedEntriesContainer.innerHTML = '';
+    if(savedDiarioEntries.length === 0) {
+      savedEntriesContainer.textContent = 'Nessuna nota salvata.';
+      return;
+    }
+    savedDiarioEntries.forEach((entry,i) => {
+      const div = document.createElement('div');
+      div.style.border = '1px solid #ccc';
+      div.style.padding = '10px';
+      div.style.marginBottom = '10px';
+      div.innerHTML = `<h4>${entry.title}</h4><p>${entry.text}</p>`;
+      if(entry.photo) {
+        const img = document.createElement('img');
+        img.src = entry.photo;
+        img.style.maxWidth = '100%';
+        img.style.borderRadius = '8px';
+        div.appendChild(img);
+      }
+      savedEntriesContainer.appendChild(div);
+    });
+  }
+  renderDiarioEntries();
+
+  btnNuovoDiario.onclick = () => {
+    diarioTitle.value = '';
+    diarioText.value = '';
+    previewPhoto.innerHTML = '';
+    openModal(newDiarioModal);
+  };
+
+  btnOpenCamera.onclick = () => cameraInput.click();
+
+  cameraInput.onchange = function() {
+    if(this.files && this.files[0]) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        previewPhoto.innerHTML = `<img src="${e.target.result}" style="max-width:100%; border-radius:8px;">`;
+        previewPhoto.dataset.photo = e.target.result;
+      };
+      reader.readAsDataURL(this.files[0]);
+    }
+  };
+
+  btnSaveDiario.onclick = () => {
+    const title = diarioTitle.value.trim();
+    const text = diarioText.value.trim();
+    const photo = previewPhoto.dataset.photo || null;
+    if(!title && !text && !photo) {
+      alert('Inserisci almeno un titolo, testo o foto.');
+      return;
+    }
+    savedDiarioEntries.push({title, text, photo, date: new Date().toISOString()});
+    localStorage.setItem('diarioEntries', JSON.stringify(savedDiarioEntries));
+    renderDiarioEntries();
+    closeModal(newDiarioModal);
+  };
+
+  // --- DOCUMENTI ---
+
+const documentsListDiv = document.getElementById('documentsList');
+const scanDocumentsBtn = document.getElementById('scanDocumentsBtn');
+const documentScannerInput = document.getElementById('documentScannerInput');
+
+function getDocuments() {
+  return JSON.parse(localStorage.getItem('documents') || '[]');
+}
+function saveDocuments(docs) {
+  localStorage.setItem('documents', JSON.stringify(docs));
+}
+function renderDocuments() {
+  const docs = getDocuments();
+  documentsListDiv.innerHTML = '';
+  if(docs.length === 0){
+    documentsListDiv.innerHTML = '<p>Nessun documento salvato.</p>';
+    return;
+  }
+  docs.forEach((doc, i) => {
+    const div = document.createElement('div');
+    div.style.display = 'flex';
+    div.style.justifyContent = 'space-between';
+    div.style.alignItems = 'center';
+    div.style.borderBottom = '1px solid #ccc';
+    div.style.padding = '8px 0';
+
+    // Nome documento cliccabile
+    const nameSpan = document.createElement('span');
+    nameSpan.style.cursor = 'pointer';
+    nameSpan.style.color = '#1976d2';
+    nameSpan.textContent = doc.name || `Documento ${i+1}`;
+    nameSpan.onclick = () => {
+      // Apri documento in nuova scheda
+      if(doc.dataUrl){
+        window.open(doc.dataUrl, '_blank');
+      } else {
+        alert('Documento non disponibile.');
+      }
+    };
+    div.appendChild(nameSpan);
+
+    // Pulsante elimina
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = 'Elimina';
+    deleteBtn.style.background = '#d32f2f';
+    deleteBtn.style.color = '#fff';
+    deleteBtn.style.border = 'none';
+    deleteBtn.style.padding = '5px 10px';
+    deleteBtn.style.borderRadius = '4px';
+    deleteBtn.style.cursor = 'pointer';
+    deleteBtn.onclick = () => {
+      if(confirm(`Eliminare il documento "${doc.name || ''}"?`)){
+        let docs = getDocuments();
+        docs.splice(i,1);
+        saveDocuments(docs);
+        renderDocuments();
+      }
+    };
+    div.appendChild(deleteBtn);
+
+    documentsListDiv.appendChild(div);
+  });
+}
+
+scanDocumentsBtn.onclick = () => {
+  documentScannerInput.click();
+};
+
+documentScannerInput.onchange = () => {
+  const file = documentScannerInput.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    // Chiedi nome documento
+    let docName = prompt("Inserisci il nome del documento:", file.name);
+    if(docName === null) docName = file.name;
+
+    let docs = getDocuments();
+    docs.push({
+      name: docName,
+      dataUrl: e.target.result,
+      type: file.type,
+      date: new Date().toISOString()
+    });
+    saveDocuments(docs);
+    renderDocuments();
+  };
+  reader.readAsDataURL(file);
+};
+// ======== Traduzione al click del bottone ========
+const translateBtn = document.getElementById('translateBtn');
+const inputText = document.getElementById('inputText');  // aggiunto perché usi inputText nel click
+const outputText = document.getElementById('outputText');
+
+translateBtn.addEventListener('click', async () => {
+  const text = inputText.value.trim();
+  const fromLang = document.getElementById('langFrom').value;
+  const toLang = document.getElementById('langTo').value;
+  outputText.value = 'Traduzione in corso...';
+  const translated = await translateTextMyMemory(text, fromLang, toLang);
+  outputText.value = translated;
+});
+
+// ======== Sintesi vocale ========
+const speakBtn = document.getElementById('speakBtn');
+
+speakBtn.addEventListener('click', () => {
+  const text = outputText.value.trim();
+  if (!text) return;
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  // Usa la lingua di destinazione per la voce
+  utterance.lang = document.getElementById('langTo').value;
+
+  // Seleziona voce compatibile con lingua (facoltativo)
+  const voices = window.speechSynthesis.getVoices();
+  const voice = voices.find(v => v.lang.startsWith(utterance.lang));
+  if (voice) utterance.voice = voice;
+
+  window.speechSynthesis.speak(utterance);
+});
+
+  </script>
+<script>
+  // Quando clicchi sul bottone "Organizza il tuo prossimo viaggio", mostra la modale
+  document.getElementById('organizeTripBtn').addEventListener('click', function () {
+    document.getElementById('organizeTripModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden'; // blocca lo scroll dietro la modale
+  });
+
+  // Quando clicchi sulla X nella modale, chiudila
+  document.getElementById('closeTripModal').addEventListener('click', function () {
+    document.getElementById('organizeTripModal').style.display = 'none';
+    document.body.style.overflow = ''; // riattiva lo scroll
+  });
+</script>
+
+</body>
+</html>
