@@ -1,47 +1,57 @@
 const express = require('express');
-const path = require('path');
+const cors = require('cors');
 const app = express();
-const port = 3000;
 
-app.use(express.json());
+// Dati demo utenti salvati in memoria (da sostituire con DB reale)
+const users = [
+  { email: 'admin@example.com', password: '511199', subscription: 'pro' }
+];
 
-// Serve i file statici dalla cartella "public"
-app.use(express.static(path.join(__dirname, 'public')));
+// Middleware
+app.use(cors()); // abilita CORS per tutte le origini
+app.use(express.json()); // per leggere JSON dal body
 
-const users = {};
-
-const ADMIN_USERNAME = 'AMMINISTRATORE99';
-const ADMIN_PASSWORD = '511199';
-
+// Route register
 app.post('/register', (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ message: 'Email e password richieste' });
-  if (email.toUpperCase() === ADMIN_USERNAME) return res.status(400).json({ message: 'Username riservato' });
-  if (users[email]) return res.status(400).json({ message: 'Utente già registrato' });
+  const { email, password, confirmPassword } = req.body;
 
-  users[email] = password;
-  console.log('Utente registrato:', email);
-  res.json({ message: 'Registrazione completata' });
-});
-
-app.post('/login', (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ message: 'Email e password richieste' });
-
-  if (email.toUpperCase() === ADMIN_USERNAME) {
-    if (password === ADMIN_PASSWORD) return res.json({ message: 'Login admin riuscito' });
-    else return res.status(401).json({ message: 'Password admin errata' });
+  if (!email || !password || !confirmPassword) {
+    return res.status(400).json({ message: 'Compila tutti i campi.' });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ message: 'Password deve contenere almeno 6 caratteri.' });
+  }
+  if (password !== confirmPassword) {
+    return res.status(400).json({ message: 'Le password non corrispondono.' });
+  }
+  // Controlla se utente già esiste
+  if (users.find(u => u.email === email)) {
+    return res.status(400).json({ message: 'Utente già registrato.' });
   }
 
-  if (users[email] && users[email] === password) return res.json({ message: 'Login utente riuscito' });
-  else return res.status(401).json({ message: 'Email o password errati' });
+  // Registra nuovo utente con piano free di default
+  users.push({ email, password, subscription: 'free' });
+  return res.json({ message: 'Registrazione completata!' });
 });
 
-// Quando visiti la root manda login.html dalla cartella "public"
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+// Route login
+app.post('/login', (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email e password richieste.' });
+  }
+
+  const user = users.find(u => u.email === email && u.password === password);
+  if (!user) {
+    return res.status(401).json({ message: 'Credenziali errate.' });
+  }
+
+  // Restituisci info abbonamento per redirect frontend
+  return res.json({ subscription: user.subscription || 'free' });
 });
 
-app.listen(port, () => {
-  console.log(`✅ Server attivo su http://localhost:${port}`);
+// Porta di ascolto (per Render usa process.env.PORT)
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server avviato sulla porta ${PORT}`);
 });
