@@ -1,31 +1,43 @@
 const express = require('express');
 const path = require('path');
-const fs = require('fs');
 
 const app = express();
-
-// Render imposta la porta via variabile d’ambiente PORT
 const port = process.env.PORT || 3000;
 
-app.use(express.json());
-
-// Serve static files dalla cartella public
+// Serve la cartella public come statica
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Rotta root
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-// Login endpoint
+// Endpoint login
 app.post('/login', (req, res) => {
-  // ... codice come da esempio precedente ...
+  // Simuliamo utenti per test
+  const users = {
+    'utente@example.com': { password: 'password123', subscription: 'free' },
+    'pro@example.com': { password: 'password123', subscription: 'pro' },
+  };
+
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email e password richiesti' });
+  }
+
+  if (!users[email]) {
+    return res.status(401).json({ message: 'Utente non trovato' });
+  }
+
+  if (users[email].password !== password) {
+    return res.status(401).json({ message: 'Password errata' });
+  }
+
+  return res.json({ message: 'Login riuscito', subscription: users[email].subscription });
 });
 
-// Update subscription endpoint
-app.post('/update-subscription', (req, res) => {
-  // ... codice come da esempio precedente ...
-});
-
+// Catch all per pagine non trovate
 app.use((req, res) => {
   res.status(404).send('Pagina non trovata');
 });
