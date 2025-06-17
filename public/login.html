@@ -4,105 +4,22 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Login Tolki</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
   <style>
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(to right, #ece9e6, #ffffff);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-      flex-direction: column;
-    }
-
-    #form-container {
-      background-color: #fff;
-      padding: 30px 25px;
-      border-radius: 16px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-      max-width: 380px;
-      width: 100%;
-      text-align: center;
-    }
-
-    h1 {
-      margin-bottom: 20px;
-      color: #333;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      transition: border-color 0.3s ease;
-    }
-
-    input:focus {
-      border-color: #4A90E2;
-      outline: none;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      font-size: 1rem;
-      font-weight: 600;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      background-color: #4A90E2;
-      color: white;
-      transition: background-color 0.3s ease;
-    }
-
-    button:hover {
-      background-color: #357ABD;
-    }
-
-    .message {
-      color: red;
-      margin-top: 10px;
-      min-height: 24px;
-    }
-
-    #btnForgot {
-      background: none;
-      color: #4A90E2;
-      text-decoration: underline;
-      font-size: 0.9rem;
-      margin-top: 5px;
-      cursor: pointer;
-      border: none;
-    }
-
-    #btnForgot:hover {
-      color: #357ABD;
-    }
-
-    #passwordLegend {
-      font-size: 0.85rem;
-      color: #666;
-      margin-top: -8px;
-      margin-bottom: 12px;
-      display: none;
-      text-align: left;
-    }
-
-    #btnContainer {
-      display: flex;
-      gap: 12px;
-      margin-top: 10px;
-    }
-
-    #btnLogin, #btnRegister {
-      flex: 1;
-    }
+    /* Stili originali senza modifiche */
+    body { font-family: 'Poppins', sans-serif; background: linear-gradient(to right, #ece9e6, #ffffff); display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; flex-direction: column; }
+    #form-container { background-color: #fff; padding: 30px 25px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1); max-width: 380px; width: 100%; text-align: center; }
+    h1 { margin-bottom: 20px; color: #333; }
+    input { width: 100%; padding: 12px; margin: 10px 0; font-size: 1rem; border: 1px solid #ccc; border-radius: 8px; transition: border-color 0.3s ease; }
+    input:focus { border-color: #4A90E2; outline: none; }
+    button { width: 100%; padding: 12px; margin-top: 10px; font-size: 1rem; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; background-color: #4A90E2; color: white; transition: background-color 0.3s ease; }
+    button:hover { background-color: #357ABD; }
+    .message { color: red; margin-top: 10px; min-height: 24px; }
+    #btnForgot { background: none; color: #4A90E2; text-decoration: underline; font-size: 0.9rem; margin-top: 5px; cursor: pointer; border: none; }
+    #btnForgot:hover { color: #357ABD; }
+    #passwordLegend { font-size: 0.85rem; color: #666; margin-top: -8px; margin-bottom: 12px; display: none; text-align: left; }
+    #btnContainer { display: flex; gap: 12px; margin-top: 10px; }
+    #btnLogin, #btnRegister { flex: 1; }
   </style>
 </head>
 <body>
@@ -113,12 +30,12 @@
   <input type="password" id="password" placeholder="Password" required />
   <input type="password" id="confirmPassword" placeholder="Conferma Password" required style="display:none;" />
   <div id="passwordLegend">La password deve contenere almeno 6 caratteri</div>
-  
+
   <div id="btnContainer">
     <button id="btnLogin">Accedi</button>
     <button id="btnRegister">Registrati</button>
   </div>
-  
+
   <button id="btnForgot">Password dimenticata?</button>
   <div class="message" id="message"></div>
 </div>
@@ -238,10 +155,8 @@
       return;
     }
 
-    // Login admin (solo locale, non sicuro ma per esempio)
     if (email.toUpperCase() === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
       showMessage('Accesso come amministratore.', 'green');
-      // Qui puoi fare redirect a pagina admin se esiste
       return;
     }
 
@@ -257,11 +172,13 @@
       if (response.ok) {
         showMessage('Login riuscito! Redirezionamento...', 'green');
 
-        // Redireziona in base alla subscription
+        // *** SALVATAGGIO EMAIL PER SUBSCRIPTION ***
+        localStorage.setItem('tolki_email', email);
+
         if (data.subscription === 'pro') {
-          window.location.href = '/dashboard.html'; // esempio pagina pro
+          window.location.href = '/dashboard.html';
         } else {
-          window.location.href = '/homepage.html';  // esempio pagina free
+          window.location.href = '/homepage.html';
         }
 
       } else {
