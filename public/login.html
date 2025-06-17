@@ -193,95 +193,83 @@
 
   async function registerUser() {
     const email = emailInput.value.trim();
-    const pass = passwordInput.value.trim();
-    const confirmPass = confirmPasswordInput.value.trim();
+    const password = passwordInput.value.trim();
+    const confirmPassword = confirmPasswordInput.value.trim();
 
-    if (!email || !pass || !confirmPass) {
-      showMessage("Inserisci email, password e conferma password");
+    if (!email || !password || !confirmPassword) {
+      showMessage('Compila tutti i campi per registrarti.');
       return;
     }
 
-    if (pass.length < 6) {
-      showMessage("La password deve contenere almeno 6 caratteri");
+    if (password.length < 6) {
+      showMessage('La password deve contenere almeno 6 caratteri.');
       return;
     }
 
-    if (pass !== confirmPass) {
-      showMessage("Le password non corrispondono");
-      return;
-    }
-
-    if (email.toUpperCase() === ADMIN_USERNAME) {
-      showMessage("Non puoi registrarti con questo username riservato all'amministratore");
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      showMessage("Inserisci un'email valida");
+    if (password !== confirmPassword) {
+      showMessage('Le password non corrispondono.');
       return;
     }
 
     try {
-      const res = await fetch('/register', {
+      const response = await fetch('/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: pass, confirmPassword: confirmPass })
+        body: JSON.stringify({ email, password, confirmPassword })
       });
-      const data = await res.json();
-
-      if (res.ok) {
-        showMessage("Registrazione completata. Ora accedi.", 'green');
+      const data = await response.json();
+      if (response.ok) {
+        showMessage('Registrazione completata! Ora puoi accedere.', 'green');
         switchToLogin();
       } else {
-        showMessage(data.message || "Errore nella registrazione");
+        showMessage(data.message || 'Errore nella registrazione.');
       }
-    } catch (err) {
-      showMessage("Errore di connessione col server");
+    } catch (error) {
+      showMessage('Errore di connessione al server.');
     }
   }
 
   async function loginUser() {
     const email = emailInput.value.trim();
-    const pass = passwordInput.value.trim();
+    const password = passwordInput.value.trim();
 
-    if (!email || !pass) {
-      showMessage("Inserisci email o username e password");
-      return false;
+    if (!email || !password) {
+      showMessage('Inserisci email e password.');
+      return;
     }
 
-    if (email.toUpperCase() === ADMIN_USERNAME && pass === ADMIN_PASSWORD) {
-      localStorage.setItem('loggedInAdmin', ADMIN_USERNAME);
-      window.location.href = 'admin.html';
-      return true;
+    // Login admin (solo locale, non sicuro ma per esempio)
+    if (email.toUpperCase() === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+      showMessage('Accesso come amministratore.', 'green');
+      // Qui puoi fare redirect a pagina admin se esiste
+      return;
     }
 
     try {
-      const res = await fetch('/login', {
+      const response = await fetch('/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: pass })
+        body: JSON.stringify({ email, password })
       });
-      const data = await res.json();
 
-      if (res.ok) {
-        localStorage.setItem('loggedInUser', email);
-        window.location.href = 'dashboard.html';
-        return true;
+      const data = await response.json();
+
+      if (response.ok) {
+        showMessage('Login riuscito! Redirezionamento...', 'green');
+
+        // Redireziona in base alla subscription
+        if (data.subscription === 'pro') {
+          window.location.href = '/dashboard.html'; // esempio pagina pro
+        } else {
+          window.location.href = '/homepage.html';  // esempio pagina free
+        }
+
       } else {
-        showMessage(data.message || "Email o password errati");
-        return false;
+        showMessage(data.message || 'Errore nel login.');
       }
-    } catch (err) {
-      showMessage("Errore di connessione col server");
-      return false;
+    } catch (error) {
+      showMessage('Errore di connessione al server.');
     }
-  }
-
-  if(localStorage.getItem('loggedInUser')){
-    window.location.href = 'dashboard.html';
-  } else if(localStorage.getItem('loggedInAdmin')){
-    window.location.href = 'admin.html';
   }
 </script>
 

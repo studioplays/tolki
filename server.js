@@ -5,8 +5,6 @@ const app = express();
 const port = 3000;
 
 app.use(express.json());
-
-// Serviamo prima i file statici dalla cartella public
 app.use(express.static(path.join(__dirname, 'public')));
 
 const USERS_FILE = path.join(__dirname, 'users.json');
@@ -14,7 +12,6 @@ const USERS_FILE = path.join(__dirname, 'users.json');
 const ADMIN_USERNAME = 'AMMINISTRATORE99';
 const ADMIN_PASSWORD = '511199';
 
-// Funzioni helper per leggere/salvare utenti da file JSON
 function loadUsers() {
   try {
     if (!fs.existsSync(USERS_FILE)) return {};
@@ -35,7 +32,6 @@ function saveUsers(users) {
   }
 }
 
-// REGISTER
 app.post('/register', (req, res) => {
   const { email, password, confirmPassword } = req.body;
 
@@ -56,7 +52,6 @@ app.post('/register', (req, res) => {
   if (users[email])
     return res.status(400).json({ message: 'Utente già registrato' });
 
-  // Salviamo l'utente con abbonamento free di default
   users[email] = { password, subscription: 'free' };
 
   saveUsers(users);
@@ -65,7 +60,6 @@ app.post('/register', (req, res) => {
   res.json({ message: 'Registrazione completata' });
 });
 
-// LOGIN
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
 
@@ -79,12 +73,16 @@ app.post('/login', (req, res) => {
 
   const users = loadUsers();
 
-  if (users[email] && users[email].password === password)
-    return res.json({ message: 'Login utente riuscito' });
-  else return res.status(401).json({ message: 'Email o password errati' });
+  if (users[email] && users[email].password === password) {
+    return res.json({
+      message: 'Login utente riuscito',
+      subscription: users[email].subscription || 'free'
+    });
+  } else {
+    return res.status(401).json({ message: 'Email o password errati' });
+  }
 });
 
-// GET USERS (solo admin)
 app.get('/users', (req, res) => {
   const loggedInAdmin = req.headers['x-admin'];
   if (loggedInAdmin !== ADMIN_USERNAME) {
@@ -93,7 +91,6 @@ app.get('/users', (req, res) => {
 
   const users = loadUsers();
 
-  // Mappiamo gli utenti senza password, solo email + abbonamento
   const usersList = Object.entries(users).map(([email, data]) => ({
     email,
     subscription: data.subscription || 'free'
@@ -102,7 +99,6 @@ app.get('/users', (req, res) => {
   res.json(usersList);
 });
 
-// DELETE USER (solo admin)
 app.post('/delete-user', (req, res) => {
   const loggedInAdmin = req.headers['x-admin'];
   if (loggedInAdmin !== ADMIN_USERNAME) {
@@ -126,7 +122,6 @@ app.post('/delete-user', (req, res) => {
   res.json({ message: 'Utente eliminato' });
 });
 
-// ROOT serve login.html (dopo static)
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
