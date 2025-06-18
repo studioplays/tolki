@@ -3,112 +3,64 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Login - Tolki</title>
+  <title>Caricamento - Tolki</title>
   <style>
     body {
+      margin: 0;
+      background-color: #0078D7;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f0f2f5;
+      color: white;
+      height: 100vh;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      margin: 0;
+      overflow: hidden;
     }
-    form {
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      width: 320px;
-    }
-    h2 {
-      margin-bottom: 20px;
-      color: #0078D7;
-    }
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: 600;
-    }
-    input[type="email"], input[type="password"] {
-      width: 100%;
-      padding: 10px;
-      margin-top: 8px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 1rem;
-      box-sizing: border-box;
-    }
-    button {
-      margin-top: 20px;
-      width: 100%;
-      padding: 12px;
-      font-size: 1rem;
-      background-color: #0078D7;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
+    h1 {
       font-weight: 700;
-      transition: background-color 0.2s ease;
+      font-size: 2.2rem;
+      margin-bottom: 40px;
+      text-align: center;
+      text-shadow: 0 0 10px rgba(0,0,0,0.3);
     }
-    button:hover {
-      background-color: #005fa3;
+
+    .loader-container {
+      width: 80%;
+      max-width: 400px;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: inset 0 0 8px rgba(255,255,255,0.3);
     }
-    .error {
-      color: red;
-      margin-top: 10px;
-      font-weight: 600;
+
+    .loader-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #ffa726, #ffb74d, #ffa726);
+      border-radius: 12px 0 0 12px;
+      animation: loadingAnim 3s linear forwards;
+      box-shadow: 0 0 10px #ffb74d, 0 0 20px #ffa726;
+    }
+
+    @keyframes loadingAnim {
+      from { width: 0%; }
+      to { width: 100%; border-radius: 12px; }
     }
   </style>
 </head>
 <body>
-  <form id="loginForm" novalidate>
-    <h2>Login Tolki</h2>
-    <label for="email">Email</label>
-    <input type="email" id="email" placeholder="email@esempio.com" required />
-    <label for="password">Password</label>
-    <input type="password" id="password" placeholder="Password" required />
-    <button type="submit">Accedi</button>
-    <div class="error" id="errorMsg"></div>
-  </form>
+  <h1>TOLKI<br><small style="font-weight: 400; font-size: 1rem; opacity: 0.85;">Il tuo assistente virtuale da viaggio</small></h1>
+  <div class="loader-container" aria-label="barra di caricamento">
+    <div class="loader-bar"></div>
+  </div>
 
   <script>
-    // Semplice DB fittizio utenti (email + password)
-    const users = [
-      { email: "utente1@example.com", password: "password123" },
-      { email: "prova@dominio.it", password: "123456" }
-    ];
-
-    const loginForm = document.getElementById('loginForm');
-    const errorMsg = document.getElementById('errorMsg');
-
-    function setCookie(name, value, days) {
-      const d = new Date();
-      d.setTime(d.getTime() + (days*24*60*60*1000));
-      const expires = "expires="+ d.toUTCString();
-      document.cookie = name + "=" + value + ";" + expires + ";path=/";
-    }
-
-    loginForm.addEventListener('submit', e => {
-      e.preventDefault();
-      errorMsg.textContent = "";
-
-      const email = loginForm.email.value.trim();
-      const password = loginForm.password.value;
-
-      // Controllo semplice login
-      const user = users.find(u => u.email === email && u.password === password);
-
-      if (user) {
-        // Login ok, salvo cookie per 1 giorno
-        setCookie('tolkiUser', email, 1);
-        // Redirect a index.html
-        window.location.href = 'index.html';
-      } else {
-        errorMsg.textContent = "Email o password errati.";
-      }
-    });
+    // Al termine dell'animazione, redirect a index.html
+    setTimeout(() => {
+      window.location.href = 'index.html';
+    }, 3000); // 3 secondi, durata animazione
   </script>
 </body>
 </html>
