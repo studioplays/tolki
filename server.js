@@ -1,15 +1,20 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
+
 const app = express();
 
-// Dati demo utenti salvati in memoria (da sostituire con DB reale)
+// Demo utenti salvati in memoria (da sostituire con DB reale)
 const users = [
   { email: 'admin@example.com', password: '511199', subscription: 'pro' }
 ];
 
 // Middleware
-app.use(cors()); // abilita CORS per tutte le origini
-app.use(express.json()); // per leggere JSON dal body
+app.use(cors());
+app.use(express.json());
+
+// Serve i file statici dalla cartella "public"
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Route register
 app.post('/register', (req, res) => {
@@ -24,12 +29,10 @@ app.post('/register', (req, res) => {
   if (password !== confirmPassword) {
     return res.status(400).json({ message: 'Le password non corrispondono.' });
   }
-  // Controlla se utente già esiste
   if (users.find(u => u.email === email)) {
     return res.status(400).json({ message: 'Utente già registrato.' });
   }
 
-  // Registra nuovo utente con piano free di default
   users.push({ email, password, subscription: 'free' });
   return res.json({ message: 'Registrazione completata!' });
 });
@@ -37,6 +40,7 @@ app.post('/register', (req, res) => {
 // Route login
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
+
   if (!email || !password) {
     return res.status(400).json({ message: 'Email e password richieste.' });
   }
@@ -46,11 +50,15 @@ app.post('/login', (req, res) => {
     return res.status(401).json({ message: 'Credenziali errate.' });
   }
 
-  // Restituisci info abbonamento per redirect frontend
   return res.json({ subscription: user.subscription || 'free' });
 });
 
-// Porta di ascolto (per Render usa process.env.PORT)
+// Per tutte le altre richieste, serve index.html (per SPA)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Porta di ascolto (Render la imposta con process.env.PORT)
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server avviato sulla porta ${PORT}`);
